@@ -1,0 +1,8 @@
+numpy==2.4.1
+openvino==2025.4.1
+openvino-telemetry==2025.2.0
+packaging==25.0
+pillow==12.1.0
+pywatchman==3.0.0
+TBB==0.2
+wheel==0.46.3
