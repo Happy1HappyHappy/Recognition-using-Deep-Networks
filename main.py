@@ -105,8 +105,6 @@ def main():
     batch_size_test = 1000
     learning_rate = 0.01
     momentum = 0.5
-    log_interval = 10
-    random_seed = 1
 
     # Training sets and load it into DataSet
     train_loader = torch.utils.data.DataLoader(

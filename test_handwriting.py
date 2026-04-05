@@ -23,7 +23,7 @@ def main():
     # Load each digit image
     images = []
     for i in range(10):
-        img = Image.open(f'./digits/digit_{i}.png')
+        img = Image.open(f'./data/digit_{i}.png')
         img_tensor = transform(img)
         images.append(img_tensor)
 

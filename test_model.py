@@ -15,7 +15,7 @@ def main():
 
     # Load the model and set to evaluation mode
     model = MyNetwork()
-    model.load_state_dict(torch.load('model.pth'))
+    model.load_state_dict(torch.load('./model/model.pth'))
     model.eval()
 
     # Get the first 10 examples from the test set
