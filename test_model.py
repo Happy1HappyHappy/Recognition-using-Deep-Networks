@@ -49,7 +49,7 @@ def test_digits_with_predictions(model, test_loader):
     plt.show()
 
 
-def test_handwritten_digits(model, image_dir='./data/test/'):
+def test_handwritten_digits(model, image_dir='./data/hand_write_digts/'):
     """This function loads handwritten digit images from a directory,
     preprocesses them to match MNIST format, runs them through the network,
     and displays the results."""
