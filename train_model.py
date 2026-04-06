@@ -138,64 +138,39 @@ def test_network(model, test_loader):
     test_losses.append(test_loss)
     print(f'Test Accuracy = {accuracy:.2f}%')
 
-def test_handwritten_digits(model, image_dir='./data/hand_write_digts/'):
-    """This function loads handwritten digit images from a directory,
-    preprocesses them to match MNIST format, runs them through the network,
-    and displays the results."""
 
-    transform = torchvision.transforms.Compose([
-        torchvision.transforms.Grayscale(),
-        torchvision.transforms.Resize((28, 28)),
-        torchvision.transforms.ToTensor(),
-        torchvision.transforms.Lambda(lambda x: 1.0 - x),  # invert: black bg, white digit
-        torchvision.transforms.Normalize((0.1307,), (0.3081,))
-    ])
+def draw_n_test_images(test_loader, n):
+    """This function draws n images from the test set and displays their
+    ground truth labels"""
+    # Get the first batch of test data and targets
+    examples = enumerate(test_loader)
+    _, (example_data, example_targets) = next(examples)
 
-    # Load all images from the directory, sorted by filename
-    image_files = sorted([
-        f for f in os.listdir(image_dir)
-        if f.lower().endswith(('.png', '.jpg', '.jpeg'))
-    ])
-
-    images = []
-    preds = []
-
-    model.eval()
-    with torch.no_grad():
-        for fname in image_files:
-            path = os.path.join(image_dir, fname)
-            img = torchvision.io.read_image(path)  # load raw for display
-            tensor = transform(
-                torchvision.transforms.functional.to_pil_image(img)
-            ).unsqueeze(0)  # add batch dimension
-
-            output = model(tensor)
-            pred = output.argmax(dim=1).item()
-            images.append(img)
-            preds.append(pred)
-
-    # Display results
-    n = len(images)
-    cols = 5
-    rows = (n + cols - 1) // cols
-    fig, axes = plt.subplots(rows, cols, figsize=(12, 3 * rows))
-    fig.suptitle("Handwritten Digit Predictions", fontsize=16)
-    axes = axes.flat
-
-    for i, (img, pred) in enumerate(zip(images, preds)):
-        ax = axes[i]
-        # Convert to grayscale numpy for display
-        img_gray = torchvision.transforms.functional.to_pil_image(img).convert('L')
-        ax.imshow(img_gray, cmap='gray')
-        ax.set_title(f'Pred: {pred}')
-        ax.axis('off')
-
-    # Hide unused subplots
-    for j in range(i + 1, rows * cols):
-        axes[j].axis('off')
-
-    plt.tight_layout()
+    # Plot the first n images in the test set and their corresponding labels
+    test_fig = plt.figure()
+    test_fig.suptitle("MNIST Dataset Samples", fontsize=16)
+    for i in range(n):
+        plt.subplot(n//3 + (1 if n % 3 != 0 else 0), 3, i+1)
+        plt.tight_layout()
+        plt.imshow(example_data[i][0], cmap='gray', interpolation='none')
+        plt.title(f"Ground Truth: {example_targets[i]}")
+        plt.xticks([])
+        plt.yticks([])
     plt.show()
+
+
+def draw_training_and_test_loss():
+    """This function plots the training and test losses over time"""
+    loss_fig = plt.figure()
+    loss_fig.suptitle("Training and Test Loss", fontsize=16)
+    plt.plot(train_counter, train_losses, color='blue', label='Train loss')
+    plt.scatter(test_counter, test_losses, color='red', zorder=5,
+                label='Test loss')
+    plt.xlabel('number of training examples seen')
+    plt.ylabel('negative log likelihood loss')
+    plt.legend()
+    plt.show()
+
 
 def main(argv):
     """This function sets up the data, creates an instance of the network,
@@ -226,23 +201,8 @@ def main(argv):
                     batch_size=BATCH_SIZE_TEST, shuffle=False
                     )
 
-    # Get the first batch of test data and targets
-    examples = enumerate(test_loader)
-    _, (example_data, example_targets) = next(examples)
-    # For debugging: print the shape of the example data in test sets
-    # print(example_data.shape)
-
-    # Plot the first 6 images in the test set and their corresponding labels
-    test_fig = plt.figure()
-    test_fig.suptitle("MNIST Dataset Samples", fontsize=16)
-    for i in range(6):
-        plt.subplot(2, 3, i+1)
-        plt.tight_layout()
-        plt.imshow(example_data[i][0], cmap='gray', interpolation='none')
-        plt.title(f"Ground Truth: {example_targets[i]}")
-        plt.xticks([])
-        plt.yticks([])
-    plt.show()
+    # Draw some test images with their ground truth labels
+    draw_n_test_images(test_loader, n=6)
 
     # Create an instance of the network
     model = MyNetwork()
@@ -264,18 +224,8 @@ def main(argv):
     torch.save(model.state_dict(), './model/model.pth')
 
     # Plot the training loss and test loss
-    loss_fig = plt.figure()
-    loss_fig.suptitle("Training and Test Loss", fontsize=16)
-    plt.plot(train_counter, train_losses, color='blue', label='Train loss')
-    plt.scatter(test_counter, test_losses, color='red', zorder=5,
-                label='Test loss')
-    plt.xlabel('number of training examples seen')
-    plt.ylabel('negative log likelihood loss')
-    plt.legend()
-    plt.show()
+    draw_training_and_test_loss()
 
-    # Test on handwritten digits
-    test_handwritten_digits(model)
 
 if __name__ == "__main__":
     main(sys.argv)
