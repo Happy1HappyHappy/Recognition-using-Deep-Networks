@@ -43,8 +43,8 @@ def train_greek(model, optimizer, greek_train, epoch, losses):
 # Predict a single image
 def predict_image(img_path, model, labels):
     transform = torchvision.transforms.Compose([
+        torchvision.transforms.Grayscale(),
         torchvision.transforms.ToTensor(),
-        GreekTransform(),
         torchvision.transforms.Normalize((0.1307,), (0.3081,))
     ])
 
@@ -83,8 +83,8 @@ def main():
         torchvision.datasets.ImageFolder(
             training_set_path,
             transform=torchvision.transforms.Compose([
-                torchvision.transforms.ToTensor(),
                 GreekTransform(),
+                torchvision.transforms.ToTensor(),
                 torchvision.transforms.Normalize((0.1307,), (0.3081,))
             ])
         ),
