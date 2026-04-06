@@ -10,7 +10,7 @@ predicted labels.
 import torch
 import torchvision
 import matplotlib.pyplot as plt
-from main import MyNetwork
+from train_model import MyNetwork
 
 MODEL_PATH = './model/model.pth'
 

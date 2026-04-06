@@ -2,7 +2,7 @@ import torch
 import torchvision.transforms as transforms
 from PIL import Image
 import matplotlib.pyplot as plt
-from main import MyNetwork  
+from train_model import MyNetwork  
 
 def main():
     # Load the trained model

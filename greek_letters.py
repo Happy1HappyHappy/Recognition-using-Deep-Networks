@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import torchvision
 import matplotlib.pyplot as plt
 from PIL import Image
-from main import MyNetwork
+from train_model import MyNetwork
 
 
 class GreekTransform:
@@ -117,9 +117,9 @@ def main():
     labels = {0: 'alpha', 1: 'beta', 2: 'gamma'}
 
     my_images = [
-        './my_images/my_alpha.png',
-        './my_images/my_beta.png',
-        './my_images/my_gamma.png',
+        './data/greek_test/alpha.jpg',
+        './data/greek_test/beta.jpg',
+        './data/greek_test/gamma.jpg',
     ]
 
     print("\nResults on custom images:")
