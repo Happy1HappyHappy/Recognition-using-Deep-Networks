@@ -51,8 +51,6 @@ class MyNetwork(nn.Module):
         # log_softmax function applied to the output
         return F.log_softmax(x, dim=1)
     
-
-# useful functions with a comment for each function
 def train_network(model, optimizer, train_loader, epoch, train_losses, train_counter, batch_size):
     model.train()
     correct = 0
