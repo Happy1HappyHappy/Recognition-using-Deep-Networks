@@ -31,7 +31,6 @@ checkpoints/
 
 # Local datasets and downloaded files
 files/
-data/
 
 # OS / editor files
 .DS_Store
