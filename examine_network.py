@@ -46,6 +46,66 @@ class MyNetwork(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
+def print_weights(weights):
+    """Print the weights of the filters in a readable format"""
+    print("=== conv1 Weight ===")
+    print(f"Shape: {weights.shape}")
+    print()
+    for i in range(weights.shape[0]):
+        print(f"Filter {i}:")
+        # detach the weights from the computation graph and convert to
+        # numpy for printing
+        print(weights[i, 0].detach().numpy())
+        print()
+
+
+def draw_filters(filters):
+    """Visualize the filters as 5x5 images in a grid"""
+    fig = plt.figure(figsize=(8, 6))
+    fig.suptitle("conv1 Filters (10 filters, 5x5)")
+
+    for i in range(filters.shape[0]):
+        plt.subplot(3, 4, i + 1)
+        plt.imshow(filters[i, 0].detach().numpy())
+        plt.title(f"Filter {i}")
+        plt.xticks([])
+        plt.yticks([])
+
+    plt.tight_layout()
+    plt.show()
+
+
+def draw_filters_effects(filters, img):
+    """Visualize the effects of each filter on the input image"""
+    # Apply each filter to the image using cv2.filter2D
+    # Visualize filter and filtered image side by side in a 4x5 grid
+    fig = plt.figure(figsize=(10, 8))
+    fig.suptitle("Filters and Their Effects on First Training Image")
+
+    with torch.no_grad():
+        for i in range(filters.shape[0]):
+            kernel = filters[i, 0].numpy()
+            # Apply the filter to the image using OpenCV's filter2D function
+            filtered = cv2.filter2D(img, -1, kernel)
+
+            # Left: the filter itself
+            plt.subplot(5, 4, 2 * i + 1)
+            plt.imshow(kernel, cmap='gray')
+            plt.title(f"Filter {i}")
+            plt.xticks([])
+            plt.yticks([])
+
+            # Right: result of applying the filter
+            plt.subplot(5, 4, 2 * i + 2)
+            plt.imshow(filtered, cmap='gray')
+            plt.title(f"Filtered {i}")
+            plt.xticks([])
+            plt.yticks([])
+
+    plt.tight_layout()
+    plt.show()
+
+
 def main():
     """This function loads the trained model, prints the weights of the
     first convolutional layer, and visualizes the filters and their effects
@@ -63,32 +123,12 @@ def main():
 
     # Get the weights of the first conv layer
     weights = model.conv1.weight
-    print("=== conv1 Weight ===")
-    print(f"Shape: {weights.shape}")
-    print()
 
-    # Print each filter's weights
-    weights_size = weights.shape[0]
-    for i in range(weights_size):
-        print(f"Filter {i}:")
-        # detach the weights from the computation graph and convert
-        # to numpy for printing
-        print(weights[i, 0].detach().numpy())
-        print()
+    # Print first conv layer's weights
+    print_weights(weights)
 
     # Visualize the 10 filters in a 3x4 grid
-    fig = plt.figure(figsize=(8, 6))
-    fig.suptitle("conv1 Filters (10 filters, 5x5)")
-
-    for i in range(weights_size):
-        plt.subplot(3, 4, i + 1)
-        plt.imshow(weights[i, 0].detach().numpy())
-        plt.title(f"Filter {i}")
-        plt.xticks([])
-        plt.yticks([])
-
-    plt.tight_layout()
-    plt.show()
+    draw_filters(weights)
 
     # Load the first training image
     train_loader = torch.utils.data.DataLoader(
@@ -112,31 +152,7 @@ def main():
 
     # Apply each filter to the image using cv2.filter2D
     # Visualize filter and filtered image side by side in a 4x5 grid
-    fig = plt.figure(figsize=(10, 8))
-    fig.suptitle("Filters and Their Effects on First Training Image")
-
-    with torch.no_grad():
-        for i in range(weights_size):
-            kernel = weights[i, 0].numpy()
-            # Apply the filter to the image using OpenCV's filter2D function
-            filtered = cv2.filter2D(img, -1, kernel)
-
-            # Left: the filter itself
-            plt.subplot(5, 4, 2 * i + 1)
-            plt.imshow(kernel, cmap='gray')
-            plt.title(f"Filter {i}")
-            plt.xticks([])
-            plt.yticks([])
-
-            # Right: result of applying the filter
-            plt.subplot(5, 4, 2 * i + 2)
-            plt.imshow(filtered, cmap='gray')
-            plt.title(f"Filtered {i}")
-            plt.xticks([])
-            plt.yticks([])
-
-    plt.tight_layout()
-    plt.show()
+    draw_filters_effects(weights, img)
 
 
 if __name__ == "__main__":
