@@ -59,6 +59,43 @@ def predict_image(img_path, model, labels):
     print(f'{img_path} → Predicted: {labels[pred]}')
     return pred
 
+def plot_greek_predictions(my_images, model, labels):
+    transform = torchvision.transforms.Compose([
+        torchvision.transforms.Grayscale(),
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize((0.1307,), (0.3081,))
+    ])
+
+    n = len(my_images)
+    cols = 3
+    rows = (n + cols - 1) // cols
+    fig, axes = plt.subplots(rows, cols, figsize=(10, 3 * rows))
+    fig.suptitle("Greek Letter Predictions", fontsize=16)
+    axes = axes.flat if n > 1 else [axes]
+
+    model.eval()
+    with torch.no_grad():
+        for i, img_path in enumerate(my_images):
+            img = Image.open(img_path)
+            img_tensor = transform(img).unsqueeze(0)
+            output = model(img_tensor)
+            pred = output.argmax(dim=1).item()
+            true_label = os.path.splitext(os.path.basename(img_path))[0]  # filename as true label
+
+            ax = axes[i]
+            ax.imshow(img, cmap='gray')
+            correct = labels[pred] == true_label
+            color = 'green' if correct else 'red'
+            ax.set_title(f'Pred: {labels[pred]}, True: {true_label}', color=color)
+            ax.axis('off')
+
+    for j in range(i + 1, rows * cols):
+        axes[j].axis('off')
+
+    plt.tight_layout()
+    plt.savefig('greek_predictions.png')
+    plt.show()
+
 
 def main():
     # Load pre-trained model
@@ -116,11 +153,12 @@ def main():
 
     labels = {0: 'alpha', 1: 'beta', 2: 'gamma'}
 
-    my_images = [
-        './data/greek_test/alpha.jpg',
-        './data/greek_test/beta.jpg',
-        './data/greek_test/gamma.jpg',
-    ]
+    image_dir = './data/greek_test/'
+    my_images = sorted([
+        os.path.join(image_dir, f)
+        for f in os.listdir(image_dir)
+        if f.lower().endswith(('.png', '.jpg', '.jpeg'))
+    ])
 
     print("\nResults on custom images:")
     for img_path in my_images:
@@ -128,6 +166,8 @@ def main():
             predict_image(img_path, network, labels)
         else:
             print(f'{img_path} not found.')
+    
+    plot_greek_predictions(my_images, network, labels)
 
 
 if __name__ == "__main__":
