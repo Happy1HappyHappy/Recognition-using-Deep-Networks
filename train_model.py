@@ -138,6 +138,64 @@ def test_network(model, test_loader):
     test_losses.append(test_loss)
     print(f'Test Accuracy = {accuracy:.2f}%')
 
+def test_handwritten_digits(model, image_dir='./data/hand_write_digts/'):
+    """This function loads handwritten digit images from a directory,
+    preprocesses them to match MNIST format, runs them through the network,
+    and displays the results."""
+
+    transform = torchvision.transforms.Compose([
+        torchvision.transforms.Grayscale(),
+        torchvision.transforms.Resize((28, 28)),
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Lambda(lambda x: 1.0 - x),  # invert: black bg, white digit
+        torchvision.transforms.Normalize((0.1307,), (0.3081,))
+    ])
+
+    # Load all images from the directory, sorted by filename
+    image_files = sorted([
+        f for f in os.listdir(image_dir)
+        if f.lower().endswith(('.png', '.jpg', '.jpeg'))
+    ])
+
+    images = []
+    preds = []
+
+    model.eval()
+    with torch.no_grad():
+        for fname in image_files:
+            path = os.path.join(image_dir, fname)
+            img = torchvision.io.read_image(path)  # load raw for display
+            tensor = transform(
+                torchvision.transforms.functional.to_pil_image(img)
+            ).unsqueeze(0)  # add batch dimension
+
+            output = model(tensor)
+            pred = output.argmax(dim=1).item()
+            images.append(img)
+            preds.append(pred)
+
+    # Display results
+    n = len(images)
+    cols = 5
+    rows = (n + cols - 1) // cols
+    fig, axes = plt.subplots(rows, cols, figsize=(12, 3 * rows))
+    fig.suptitle("Handwritten Digit Predictions", fontsize=16)
+    axes = axes.flat
+
+    for i, (img, pred) in enumerate(zip(images, preds)):
+        ax = axes[i]
+        # Convert to grayscale numpy for display
+        img_gray = torchvision.transforms.functional.to_pil_image(img).convert('L')
+        ax.imshow(img_gray, cmap='gray')
+        ax.set_title(f'Pred: {pred}')
+        ax.axis('off')
+
+    # Hide unused subplots
+    for j in range(i + 1, rows * cols):
+        axes[j].axis('off')
+
+    plt.tight_layout()
+    plt.show()
 
 def main(argv):
     """This function sets up the data, creates an instance of the network,
@@ -216,6 +274,8 @@ def main(argv):
     plt.legend()
     plt.show()
 
+    # Test on handwritten digits
+    test_handwritten_digits(model)
 
 if __name__ == "__main__":
     main(sys.argv)
