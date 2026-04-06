@@ -169,7 +169,7 @@ def main():
             transform=GREEK_TRANSFORM_PIPELINE
         ),
         batch_size=5,
-        shuffle=True
+        shuffle=False
     )
 
     # Print class to index mapping
@@ -181,7 +181,7 @@ def main():
 
     # Train the model for multiple epochs and record losses
     losses = []
-    n_epochs = 50
+    n_epochs = 45
     for epoch in range(1, n_epochs + 1):
         train_greek(network, optimizer, greek_train, epoch, losses)
 
