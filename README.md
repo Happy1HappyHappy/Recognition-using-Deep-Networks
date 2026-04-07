@@ -69,6 +69,8 @@ Replace the output layer of the MNIST model, freeze earlier weights, and train t
 python greek_letters.py
 ```
 
+Link to hand-written Greek letters: https://drive.google.com/file/d/1M2LkTKlBY8DK7Hup86uFJNqyOEx8XJjS/view?usp=sharing
+
 ### Transformer Network
 A complete replacement of the CNN layers with a Vision Transformer-like design utilizing patching, tokenizer, and transformer encoder blocks:
 ```bash
