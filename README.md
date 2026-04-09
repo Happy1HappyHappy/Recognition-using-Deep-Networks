@@ -65,27 +65,27 @@ pip install -r requirements.txt
 ### Build and Train a Network
 Create and compile the CNN with specified layers (10 5x5 filters Convolution, MaxPooling, 20 5x5 filters Convolution, Dropout, Linear). Run the following to train:
 ```bash
-python train_model.py
+python3 train_model.py
 ```
 This generates the `./model/model.pth` file and visualizes the training & testing loss curves.
 
 ### Evaluate the Network on MNIST Test Set & New Handwritten Digits
 To evaluate the network performance, examine predictions on the MNIST test set, and test it on custom handwritten digits:
 ```bash
-python test_model.py
+python3 test_model.py
 ```
 It sets the model to evaluation mode (`network.eval()`), evaluates test set accuracy, prints the top predictions for the first 10 examples, and displays a 3x3 grid of the first 9 digits. Downstream, it reads custom handwritten digit images, preprocesses them to match the MNIST format, and evaluates the model performance on these novel inputs (ensure your custom digits are thick and inverted).
 
 ### Examine the Network Architecture & Filters
 Print the network structure and visualize the 10 `conv1` layer 5x5 filters alongside their effects on a sample image:
 ```bash
-python examine_network.py
+python3 examine_network.py
 ```
 
 ### Transfer Learning on Greek Letters
 Replace the output layer of the MNIST model, freeze earlier weights, and train to classify 6 custom Greek symbols (alpha, beta, delta, epsilon, gamma, theta). Uses `GreekTransform` for custom resizing and inversion, and evaluates performance using a confusion matrix and t-SNE visualization of the 50D feature space:
 ```bash
-python greek_letters.py
+python3 greek_letters.py
 ```
 
 Link to hand-written Greek letters: https://drive.google.com/file/d/12OF7sIhxc5B9pP5RHRPD1luPmyVSo2Ko/view?usp=sharing
@@ -93,17 +93,17 @@ Link to hand-written Greek letters: https://drive.google.com/file/d/12OF7sIhxc5B
 ### Transformer Network
 A complete replacement of the CNN layers with a Vision Transformer-like design utilizing patching, tokenizer, and transformer encoder blocks:
 ```bash
-python transformer.py
+python3 transformer.py
 ```
 
 ### Fashion MNIST Custom Network
 Run the custom CNN implementation for the Fashion MNIST classification dataset to compile and evaluate the model:
 ```bash
-python owned_network.py
+python3 owned_network.py
 ```
 
 ### Fashion MNIST Hyperparameter Search
 Run the linear hyperparameter search (learning rate, filter sizes, dropout, optimizer, epochs) to find the best configuration, train the final model, and save search results:
 ```bash
-python owned_network_opt.py
+python3 owned_network_opt.py
 ```
