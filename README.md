@@ -19,6 +19,7 @@ This project focuses on building, training, analyzing, and modifying deep neural
 ├── README.md              # Project documentation
 ├── requirements.txt       # Dependencies
 ├── train_model.py         # Building and training the CNN
+├── train_model_gabor.py   # Training CNN initialized with fixed Gabor filters
 ├── test_model.py          # Evaluate on MNIST test set & custom digits
 ├── examine_network.py     # Print network structure & visualize conv1 filters
 ├── greek_letters.py       # Transfer learning for Greek symbols
@@ -30,6 +31,7 @@ This project focuses on building, training, analyzing, and modifying deep neural
 
 ## Project Structure
 - `train_model.py`: Defines the CNN architecture (`MyNetwork`), downloads the MNIST dataset, and trains the model for 5 epochs. The trained model weights are saved to `./model/model.pth`. Also plots training and testing loss.
+- `train_model_gabor.py`: Initializes the first convolutional layer with fixed Gabor filters using OpenCV, turning off gradients for this layer. Trains the remaining layers on MNIST and saves the model as `./model/model_gabor.pth`.
 - `test_model.py`: Loads the trained model and evaluates it on the MNIST test set. Prints network predictions and plots the first 9 test examples with predicted labels. It also tests the model on custom hand-drawn digit images ([0-9]), preprocessing them to match the MNIST style before evaluation.
 - `examine_network.py`: Examines the internal structure of the model, specifically analyzing and visualizing the weights of the first convolution layer (`conv1`). Applies these filters to a training example to visualize the filtering effect.
 - `greek_letters.py`: Implements transfer learning to classify 6 Greek letters (alpha, beta, delta, epsilon, gamma, theta) using the pre-trained MNIST CNN network. Freezes early layer weights and swaps the final classification layer. Includes confusion matrix and t-SNE feature space visualization.
@@ -68,6 +70,13 @@ Create and compile the CNN with specified layers (10 5x5 filters Convolution, Ma
 python3 train_model.py
 ```
 This generates the `./model/model.pth` file and visualizes the training & testing loss curves.
+
+### Train a Network with Initialized Gabor Filters
+Initialize the first convolution layer with 10 Gabor filters of different orientations, freezing their weights, and train the rest of the CNN on the MNIST dataset:
+```bash
+python3 train_model_gabor.py
+```
+This generates the `./model/model_gabor.pth` file and plots training & testing loss curves.
 
 ### Evaluate the Network on MNIST Test Set & New Handwritten Digits
 To evaluate the network performance, examine predictions on the MNIST test set, and test it on custom handwritten digits:
