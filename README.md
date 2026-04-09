@@ -5,7 +5,7 @@
 - Yu-Jing Wei
 
 ## Overview
-This project focuses on building, training, analyzing, and modifying a deep network for a digit recognition task. The models are trained using the PyTorch framework on the MNIST dataset, which contains 60,000 training and 10,000 testing images of 28x28 grayscale handwritten digits. The project progresses from basic CNN training to network analysis, transfer learning, and exploring vision transformers.
+This project focuses on building, training, analyzing, and modifying deep neural networks for image classification tasks using the PyTorch framework. Initially utilizing the MNIST dataset (handwritten digits), the project progresses from basic CNN training and network analysis to advanced transfer learning on 6 custom Greek letters (evaluated with confusion matrices and t-SNE feature space visualization). Furthermore, the repository explores Vision Transformer-like architectures and expands to the Fashion MNIST dataset, implementing custom CNNs alongside automated linear hyperparameter search strategies to methodically optimize model performance.
 
 ## Directory Structure
 ```text

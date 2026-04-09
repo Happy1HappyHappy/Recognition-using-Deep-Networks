@@ -21,7 +21,7 @@ dist/
 .mypy_cache/
 
 # Model outputs, logs, and local experiment files
-result/
+results/
 runs/
 checkpoints/
 *.pt
