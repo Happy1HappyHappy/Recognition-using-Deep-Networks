@@ -32,7 +32,7 @@ This project focuses on building, training, analyzing, and modifying a deep netw
 - `train_model.py`: Defines the CNN architecture (`MyNetwork`), downloads the MNIST dataset, and trains the model for 5 epochs. The trained model weights are saved to `./model/model.pth`. Also plots training and testing loss.
 - `test_model.py`: Loads the trained model and evaluates it on the MNIST test set. Prints network predictions and plots the first 9 test examples with predicted labels. It also tests the model on custom hand-drawn digit images ([0-9]), preprocessing them to match the MNIST style before evaluation.
 - `examine_network.py`: Examines the internal structure of the model, specifically analyzing and visualizing the weights of the first convolution layer (`conv1`). Applies these filters to a training example to visualize the filtering effect.
-- `greek_letters.py`: Implements transfer learning to classify Greek letters (alpha, beta, gamma) using the pre-trained MNIST CNN network. Freezes early layer weights and swaps the final classification layer.
+- `greek_letters.py`: Implements transfer learning to classify 6 Greek letters (alpha, beta, delta, epsilon, gamma, theta) using the pre-trained MNIST CNN network. Freezes early layer weights and swaps the final classification layer. Includes confusion matrix and t-SNE feature space visualization.
 - `transformer.py`: Re-implements the digit recognition network utilizing transformer layers in place of the convolutional layers.
 - `img_preprocessor.py`: Utilities for custom image preprocessing.
 - `owned_network.py`: Implements a simple CNN to classify the Fashion MNIST dataset, including functions to display samples and loss curves.
@@ -83,7 +83,7 @@ python examine_network.py
 ```
 
 ### Transfer Learning on Greek Letters
-Replace the output layer of the MNIST model, freeze earlier weights, and train to classify custom Greek symbols (alpha, beta, gamma). Uses `GreekTransform` for custom resizing and inversion:
+Replace the output layer of the MNIST model, freeze earlier weights, and train to classify 6 custom Greek symbols (alpha, beta, delta, epsilon, gamma, theta). Uses `GreekTransform` for custom resizing and inversion, and evaluates performance using a confusion matrix and t-SNE visualization of the 50D feature space:
 ```bash
 python greek_letters.py
 ```
@@ -94,4 +94,16 @@ Link to hand-written Greek letters: https://drive.google.com/file/d/12OF7sIhxc5B
 A complete replacement of the CNN layers with a Vision Transformer-like design utilizing patching, tokenizer, and transformer encoder blocks:
 ```bash
 python transformer.py
+```
+
+### Fashion MNIST Custom Network
+Run the custom CNN implementation for the Fashion MNIST classification dataset to compile and evaluate the model:
+```bash
+python owned_network.py
+```
+
+### Fashion MNIST Hyperparameter Search
+Run the linear hyperparameter search (learning rate, filter sizes, dropout, optimizer, epochs) to find the best configuration, train the final model, and save search results:
+```bash
+python owned_network_opt.py
 ```
