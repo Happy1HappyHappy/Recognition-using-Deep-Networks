@@ -7,13 +7,15 @@ functions, as well as visualization of results. The model is modified to
 output 3 classes corresponding to the Greek letters alpha, beta, and gamma.
 """
 
-import os
 import torch
 from torch import nn
 import torch.nn.functional as F
 import torchvision
 import matplotlib.pyplot as plt
-from PIL import Image
+import numpy as np
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.manifold import TSNE  # for Dimension Reduction
 from train_model import MyNetwork
 
 # Define class labels for the Greek letter dataset
@@ -65,46 +67,28 @@ def plot_training_loss(losses):
     plt.xlabel('Epoch')
     plt.ylabel('NLL Loss')
     plt.title('Greek Letter Training Loss')
-    plt.savefig('greek_training_loss.png')
     plt.show()
 
 
-def predict_image(img_path, model, labels):
-    """Predict the class of a single image using the trained model"""
-
-    img = Image.open(img_path)
-    # transform image and unsqueeze it to add batch dimension
-    img_tensor = GREEK_TRANSFORM_PIPELINE(img).unsqueeze(0)
-
-    model.eval()
-    with torch.no_grad():
-        output = model(img_tensor)
-        pred = output.argmax(dim=1).item()
-
-    return pred
-
-
-def predict_greek_images(image_dir, model):
+def predict_greek_images(test_loader, model):
     """Predict the classes of multiple images and return a list
     of modified images and a list of predictions"""
-    my_images = sorted([
-        os.path.join(image_dir, f)
-        for f in os.listdir(image_dir)
-        if f.lower().endswith(('.png', '.jpg', '.jpeg'))
-    ])
-    predictions = []
-    print("\nResults on custom images:")
-    for img_path in my_images:
-        if os.path.exists(img_path):
-            pred = predict_image(img_path, model, LABELS)
-            predictions.append((img_path, pred))
-            print(f'{img_path} → Predicted: {LABELS[pred]}')
-        else:
-            print(f'{img_path} not found.')
-    return my_images, predictions
+    model.eval()
+    images_list = []
+    preds_list = []
+
+    with torch.no_grad():
+        for data, target in test_loader:
+            output = model(data)
+            preds = output.argmax(dim=1).cpu().numpy()
+            for i in range(data.shape[0]):
+                images_list.append(data[i][0].cpu().numpy())
+                preds_list.append(preds[i])
+
+    return images_list, preds_list
 
 
-def plot_greek_predictions(my_images, predictions, labels):
+def plot_greek_predictions(my_images, predictions, labels, test_dataset):
     """Plot the predictions of the model on the custom images with
     correct/incorrect coloring"""
 
@@ -115,22 +99,28 @@ def plot_greek_predictions(my_images, predictions, labels):
     fig.suptitle("Greek Letter Predictions", fontsize=16)
     axes = axes.flat if n > 1 else [axes]
 
-    for i, (img_path, pred) in enumerate(predictions):
-        img = Image.open(img_path)
-        # filename as true label (without extension)
-        true_label = os.path.splitext(os.path.basename(img_path))[0]
+    for i in range(n):
+        # Get the image data and predicted index for the current image
+        img_data = my_images[i]
+        pred_idx = predictions[i]
 
-        # Display image
+        # Get the true label index from the test dataset samples
+        _, true_idx = test_dataset.samples[i]
+        true_label = labels[true_idx]
+        pred_label = labels[pred_idx]
+
         ax = axes[i]
-        ax.imshow(img, cmap='gray')
-        # For debugging, you can also display the transformed image:
-        # ax.imshow(GREEK_TRANSFORM_PIPELINE(img)[0], cmap='gray')
+        # Normalize the image data for better visualization
+        img_display = (
+            (img_data - img_data.min()) / (img_data.max() - img_data.min()))
+        ax.imshow(img_display, cmap='gray')
 
-        # Check if prediction is correct and set title color accordingly
-        correct = labels[pred] == true_label
+        # Determine if the prediction is correct and set title color
+        correct = (pred_idx == true_idx)
         color = 'green' if correct else 'red'
 
-        ax.set_title(f'Pred: {labels[pred]}, True: {true_label}', color=color)
+        ax.set_title(f'Pred: {pred_label}\nTrue: {true_label}',
+                     color=color, fontsize=10)
         ax.axis('off')
 
     # Hide remaining axes if there are fewer images than subplots
@@ -138,6 +128,62 @@ def plot_greek_predictions(my_images, predictions, labels):
         axes[j].axis('off')
 
     plt.tight_layout()
+    plt.show()
+
+
+def evaluate_extra_dimensions(model, dataloader, labels_dict):
+    """Evaluate the model on the dataset and plot additional dimensions
+    such as confusion matrix and t-SNE visualization of features"""
+    model.eval()
+    all_preds, all_targets, all_features = [], [], []
+
+    with torch.no_grad():
+        for data, target in dataloader:
+            # Extract the 50-dimensional feature vector from fc1 output
+            x = model.conv1(data)
+            x = F.max_pool2d(F.relu(x), 2)
+            x = model.conv2(x)
+            x = F.max_pool2d(F.relu(x), 2)
+            x = x.view(-1, 320)
+            x = F.relu(model.fc1(x))
+            all_features.append(x.cpu().numpy())
+
+            # Get the predicted class from the final output layer
+            output = model.fc2(x)
+            all_preds.extend(output.argmax(dim=1).cpu().numpy())
+            all_targets.extend(target.cpu().numpy())
+
+    all_features = np.concatenate(all_features, axis=0)
+    all_targets = np.array(all_targets)
+    label_names = [labels_dict[i] for i in range(len(labels_dict))]
+
+    # --- Confusion Matrix ---
+    # Plot the confusion matrix to evaluate the model's performance on
+    # each class and identify any misclassifications
+    plt.figure(figsize=(7, 5))
+    sns.heatmap(confusion_matrix(all_targets, all_preds), annot=True, fmt='d',
+                cmap='Blues', xticklabels=label_names, yticklabels=label_names)
+    plt.title('Confusion Matrix')
+    plt.ylabel('True')
+    plt.xlabel('Predicted')
+    plt.show()
+
+    # --- t-SNE Visualization ---
+    # Use t-SNE to reduce the 50D feature space to 2D for visualization
+    # Cluster the features based on their true labels to see if the model
+    # has learned meaningful representations
+
+    # Set a low perplexity to better capture local structure
+    # in the small dataset
+    tsne = TSNE(n_components=2, random_state=42, perplexity=5)
+    features_2d = tsne.fit_transform(all_features)
+    plt.figure(figsize=(8, 6))
+    for i, name in enumerate(label_names):
+        mask = all_targets == i
+        plt.scatter(
+            features_2d[mask, 0], features_2d[mask, 1], label=name, s=100)
+    plt.title('t-SNE Feature Space (50D -> 2D)')
+    plt.legend()
     plt.show()
 
 
@@ -190,11 +236,22 @@ def main():
 
     # Predict on custom images and plot results
     images_dir = './data/greek_test/'
-    my_images, predictions = predict_greek_images(
-        images_dir, network)
+    test_dataset = torchvision.datasets.ImageFolder(
+        root=images_dir,
+        transform=GREEK_TRANSFORM_PIPELINE
+    )
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset, batch_size=len(test_dataset), shuffle=False)
+
+    my_images, predictions = predict_greek_images(test_loader, network)
 
     # Plot predictions with correct/incorrect coloring
-    plot_greek_predictions(my_images, predictions, LABELS)
+    plot_greek_predictions(my_images, predictions, LABELS, test_dataset)
+
+    # Evaluate extra dimensions: confusion matrix and t-SNE visualization
+    eval_loader = torch.utils.data.DataLoader(
+        greek_train.dataset, batch_size=len(greek_train.dataset))
+    evaluate_extra_dimensions(network, eval_loader, LABELS)
 
 
 if __name__ == "__main__":
