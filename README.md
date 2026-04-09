@@ -14,6 +14,8 @@ This project focuses on building, training, analyzing, and modifying a deep netw
 ├── files/                 # PyTorch datasets (downloaded automatically)
 ├── model/                 # Saved model weights
 │   └── model.pth          # Saved CNN model (generated after training)
+├── results/               # Experiment results, plots, and CSVs
+├── venv/                  # Python virtual environment (ignored in git)
 ├── README.md              # Project documentation
 ├── requirements.txt       # Dependencies
 ├── train_model.py         # Building and training the CNN
@@ -21,7 +23,9 @@ This project focuses on building, training, analyzing, and modifying a deep netw
 ├── examine_network.py     # Print network structure & visualize conv1 filters
 ├── greek_letters.py       # Transfer learning for Greek symbols
 ├── transformer.py         # Custom Vision Transformer network
-└── img_preprocessor.py    # Helper utility for custom image preprocessing
+├── img_preprocessor.py    # Helper utility for custom image preprocessing
+├── owned_network.py       # Custom CNN implementation for Fashion MNIST
+└── owned_network_opt.py   # Automated hyperparameter search for the custom CNN
 ```
 
 ## Project Structure
@@ -31,12 +35,27 @@ This project focuses on building, training, analyzing, and modifying a deep netw
 - `greek_letters.py`: Implements transfer learning to classify Greek letters (alpha, beta, gamma) using the pre-trained MNIST CNN network. Freezes early layer weights and swaps the final classification layer.
 - `transformer.py`: Re-implements the digit recognition network utilizing transformer layers in place of the convolutional layers.
 - `img_preprocessor.py`: Utilities for custom image preprocessing.
+- `owned_network.py`: Implements a simple CNN to classify the Fashion MNIST dataset, including functions to display samples and loss curves.
+- `owned_network_opt.py`: Expands on `owned_network.py` by conducting an automated hyperparameter search using a linear search strategy. Trains final network with best configs and saves results.
 - `data/` and `files/`: Directories containing the default PyTorch dataset files and custom handwritten images/Greek letters.
 - `model/`: Directory storing the trained model states (e.g., `model.pth`).
+- `results/`: Directory storing outputs from hyperparameter search, such as `search_results.csv` and evaluation plots.
 
 ## Environment Setup
 It is recommended to use PyTorch, TorchVision, and OpenCV.
-Install the dependencies using `pip`:
+First, create and activate a Python virtual environment to manage dependencies locally:
+```bash
+# Create a virtual environment named 'venv'
+python3 -m venv venv
+
+# Activate the virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+# venv\Scripts\activate
+```
+
+Next, install the required dependencies using `pip`:
 ```bash
 pip install -r requirements.txt
 ```
