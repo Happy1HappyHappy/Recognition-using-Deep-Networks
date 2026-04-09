@@ -1,107 +1,112 @@
 """
 Claire Liu, Yu-Jing Wei
 -----
-This file contains the ImagePreprocessor class, which provides methods
-to preprocess images for digit and Greek letter recognition tasks.
-The preprocessing steps include color inversion, binarization, distance
-transformation, resizing, and blurring for digit images, while Greek
-letter images are simply resized. The processed images are saved in a
-'processed' subdirectory within the original image's directory.
+Image Preprocessing Pipeline for Deep Learning Inference.
+
+This script standardizes raw images for MNIST-style digit recognition and 
+Greek letter classification. It automatically scans input directories, 
+applies class-specific transformations, and saves processed results 
+to a 'processed' subdirectory.
 """
-import cv2
+
 import os
-import glob
-import numpy as np
 import argparse
+import cv2
+import numpy as np
 
 
 class ImagePreprocessor:
-    """Helper class to preprocess images for digit and Greek letter
-    recognition tasks."""
+    """
+    Utility class for orchestrating batch image transformations.
+    Supports specialized pipelines for digit OCR and symbolic recognition.
+    """
     def __init__(self):
-        # No global output folder needed; it will be determined per image
-        pass
+        # Support common image extensions
+        self.valid_extensions = ('.png', '.jpg', '.jpeg', '.bmp', '.tiff')
 
     def process_digit(self, img):
         """
-        Process images for MNIST format: 28x28, black background, 
-        white text with a realistic handwritten gradient.
+        Transforms raw images into MNIST-compatible format (28x28, centered).
+        Includes inversion, thresholding, distance transform, and smoothing.
         """
-        # 1. Invert colors (assuming input is black text on white paper)
-        # MNIST models expect a black background (0) and white stroke (255)
+        # 1. Background-Foreground Inversion
         img = cv2.bitwise_not(img)
 
-        # 2. Binarize to extract the clean shape of the digit
+        # 2. Clean binary mask extraction
         _, img_bin = cv2.threshold(img, 100, 255, cv2.THRESH_BINARY)
 
-        # 3. Distance Transform: center of the stroke becomes bright, edges become dark
-        # This simulates the pressure of a pen/marker
+        # 3. Distance Transform to simulate handwriting stroke pressure
         dist = cv2.distanceTransform(img_bin, cv2.DIST_L2, 5)
         cv2.normalize(dist, dist, 0, 255, cv2.NORM_MINMAX)
         img_grad = dist.astype(np.uint8)
 
-        # 4. Resize to 28x28 and apply Blur to soften edges (mimicking MNIST dataset)
+        # 4. Dimension scaling (28x28) and anti-aliasing
         img_resized = cv2.resize(img_grad, (28, 28), interpolation=cv2.INTER_CUBIC)
         img_final = cv2.GaussianBlur(img_resized, (3, 3), 0)
         return img_final
 
     def process_greek(self, img):
         """
-        Process images for Greek dataset: Simply resize to 128x128.
-        The actual inversion and cropping will be handled by GreekTransform in the model script.
+        Standardizes Greek letter images to 128x128 for Transfer Learning.
         """
         img_final = cv2.resize(img, (128, 128), interpolation=cv2.INTER_CUBIC)
         return img_final
 
-    def run(self, mode, input_pattern):
-        """Run the preprocessing pipeline based on the specified mode
-        and input pattern."""
-        # Get all file paths matching the input pattern
-        image_files = glob.glob(input_pattern)
-        if not image_files:
-            print(f"No files found for pattern: {input_pattern}")
+    def run(self, mode, input_dir):
+        """
+        Scans the provided directory for images and executes the pipeline.
+        """
+        if not os.path.isdir(input_dir):
+            print(f"Error: '{input_dir}' is not a valid directory.")
             return
 
-        for img_path in image_files:
-            # Read image in grayscale mode
+        # Gather all valid image files in the directory
+        image_files = [f for f in os.listdir(input_dir) 
+                       if f.lower().endswith(self.valid_extensions)]
+        
+        if not image_files:
+            print(f"No images found in: {input_dir}")
+            return
+
+        # Create 'processed' subdirectory inside the input directory
+        target_dir = os.path.join(input_dir, 'processed')
+        os.makedirs(target_dir, exist_ok=True)
+
+        print(f"Starting [{mode.upper()}] mode processing in: {input_dir}")
+
+        for filename in image_files:
+            img_path = os.path.join(input_dir, filename)
+            
+            # Read image in grayscale
             img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
             if img is None: 
-                print(f"Skipping: Could not read {img_path}")
+                print(f"   - Skipping unreadable file: {filename}")
                 continue
 
-            # --- Dynamic Directory Logic ---
-            # 1. Get the parent directory of the current image
-            original_dir = os.path.dirname(img_path)
-            # 2. Create a 'processed' folder inside that parent directory
-            target_dir = os.path.join(original_dir, 'processed')
-            os.makedirs(target_dir, exist_ok=True)
-
-            # --- Execute Processing Based on Mode ---
+            # Execute logic based on mode
             if mode == 'digit':
                 result = self.process_digit(img)
-            else: # mode == 'greek'
+            else:
                 result = self.process_greek(img)
 
-            # --- Save File ---
-            base_name = os.path.basename(img_path)
-            output_path = os.path.join(target_dir, base_name)
+            # Save to the processed folder
+            output_path = os.path.join(target_dir, filename)
             cv2.imwrite(output_path, result)
-            print(f"[{mode.upper()}] Saved to: {output_path}")
+            print(f"   - Processed: {filename}")
+
+        print(f"Done! All images saved to: {target_dir}")
 
 
 def main():
-    """Main function to parse command line arguments and
-    run the image preprocessor."""
-    # Setup command line argument parsing
-    parser = argparse.ArgumentParser(description="Image Preprocessing Tool for Digit and Greek Letter Recognition")
+    """Main entry point to parse directory-based arguments."""
+    parser = argparse.ArgumentParser(description="Batch Image Preprocessor for Digit and Greek Letters")
     parser.add_argument('--mode', type=str, required=True, choices=['digit', 'greek'], 
-                        help="Mode: 'digit' for 28x28 MNIST style, 'greek' for 128x128")
+                        help="Mode: 'digit' (28x28) or 'greek' (128x128)")
     parser.add_argument('--input', type=str, required=True,
-                        help="Input path pattern (e.g., './data/test/*.png')")
+                        help="Path to the directory containing raw images")
 
     args = parser.parse_args()
 
-    # Initialize and run the processor
     processor = ImagePreprocessor()
     processor.run(args.mode, args.input)
 

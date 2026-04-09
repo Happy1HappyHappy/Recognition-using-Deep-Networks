@@ -5,6 +5,8 @@ This file contains code to fine-tune a pre-trained model on a new dataset of
 Greek letter images. It includes data loading, training, and prediction
 functions, as well as visualization of results. The model is modified to
 output 3 classes corresponding to the Greek letters alpha, beta, and gamma.
+The code also includes additional evaluation of the model's performance
+using a confusion matrix and t-SNE visualization of the learned feature space.
 """
 
 import torch
@@ -19,7 +21,8 @@ from sklearn.manifold import TSNE  # for Dimension Reduction
 from train_model import MyNetwork
 
 # Define class labels for the Greek letter dataset
-LABELS = {0: 'alpha', 1: 'beta', 2: 'gamma'}
+LABELS = {0: 'alpha', 1: 'beta', 2: 'delta', 3: 'epsilon',
+          4: 'gamma', 5: 'theta'}
 
 
 class GreekTransform:
@@ -201,8 +204,8 @@ def main():
     for param in network.parameters():
         param.requires_grad = False
 
-    # Replace the final Fully Connected layer to output 3 classes
-    network.fc2 = nn.Linear(50, 3)
+    # Replace the final Fully Connected layer to output 6 classes
+    network.fc2 = nn.Linear(50, 6)  # 6 classes for the Greek letters
     print("\nModified network:")
     print(network)
 
@@ -222,8 +225,14 @@ def main():
     print("\nClass to index mapping:")
     print(greek_train.dataset.class_to_idx)
 
-    # Use Adam optimizer to only update the new fc2 layer
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.0001)
+    # Use Adam optimizer with different learning rates for
+    # frozen and unfrozen layers
+    optimizer = torch.optim.Adam([
+        # fc1 with a very low learning rate to prevent large updates
+        {'params': network.fc1.parameters(), 'lr': 1e-6},
+        # Only update the new fc2 layer with a higher learning rate
+        {'params': network.fc2.parameters(), 'lr': 1e-3}
+    ])
 
     # Train the model for multiple epochs and record losses
     losses = []
