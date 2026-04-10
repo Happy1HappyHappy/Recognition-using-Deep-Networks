@@ -26,7 +26,8 @@ This project focuses on building, training, analyzing, and modifying deep neural
 ├── transformer.py         # Custom Vision Transformer network
 ├── img_preprocessor.py    # Helper utility for custom image preprocessing
 ├── owned_network.py       # Custom CNN implementation for Fashion MNIST
-└── owned_network_opt.py   # Automated hyperparameter search for the custom CNN
+├── network_optimizer.py   # Automated hyperparameter search for the custom CNN
+└── network_optimizer_phase2.py   # Use the best congiguration from phase1 to automate hyperparameter search for the custom CNN
 ```
 
 ## Project Structure
@@ -38,7 +39,8 @@ This project focuses on building, training, analyzing, and modifying deep neural
 - `transformer.py`: Re-implements the digit recognition network utilizing transformer layers in place of the convolutional layers.
 - `img_preprocessor.py`: Utilities for custom image preprocessing.
 - `owned_network.py`: Implements a simple CNN to classify the Fashion MNIST dataset, including functions to display samples and loss curves.
-- `owned_network_opt.py`: Expands on `owned_network.py` by conducting an automated hyperparameter search using a linear search strategy. Trains final network with best configs and saves results.
+- `network_optimizer` : Automated Phase 1 hyperparameter search using a linear search  strategy across five dimensions: learning rate, convolution filter size, dropout rate, optimizer, and number of epochs. 
+- `network_optimizer_phase2` : Builds on the best configuration found in Phase 1 by fixing those parameters and conducting a Phase 2 search across three additional architectural dimensions: number of hidden nodes in the FC layer, batch size, and activation function.
 - `data/` and `files/`: Directories containing the default PyTorch dataset files and custom handwritten images/Greek letters.
 - `model/`: Directory storing the trained model states (e.g., `model.pth`).
 - `results/`: Directory storing outputs from hyperparameter search, such as `search_results.csv` and evaluation plots.
@@ -106,7 +108,7 @@ python3 transformer.py
 ```
 
 ### Fashion MNIST Custom Network
-Run the custom CNN implementation for the Fashion MNIST classification dataset to compile and evaluate the model:
+Run the original CNN implementation for the Fashion MNIST classification dataset to compile and evaluate the model:
 ```bash
 python3 owned_network.py
 ```
@@ -114,5 +116,6 @@ python3 owned_network.py
 ### Fashion MNIST Hyperparameter Search
 Run the linear hyperparameter search (learning rate, filter sizes, dropout, optimizer, epochs) to find the best configuration, train the final model, and save search results:
 ```bash
-python3 owned_network_opt.py
+python3 network_optimizer.py
+python3 network_optimizer_phase2.py
 ```
